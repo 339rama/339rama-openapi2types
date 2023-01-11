@@ -1,5 +1,5 @@
 {
-  "name": "339rama-openapi2types",
+  "name": "@339rama/openapi2types",
   "version": "1.0.0",
   "description": "Utility to convert open api schema to typescript types",
   "main": "index.js",

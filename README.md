@@ -3,7 +3,7 @@
 ## Installation
 
 ```
-npm install 339rama-openapi2types
+npm install @339rama/openapi2types
 ```
 
 ## Usage
