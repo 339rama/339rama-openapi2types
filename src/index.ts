@@ -1,9 +1,10 @@
+#!/usr/bin/env node
 import path from 'path'
 import { WriteStream, createWriteStream, readFileSync } from 'fs'
 import chalk from 'chalk'
 import yargs from 'yargs/yargs'
 import { hideBin } from 'yargs/helpers'
-import * as types from './types'
+import * as Types from './types'
 
 const usage = '\nUsage: openapi2types -i <schema_path> -o <output_path>'
 const argv = yargs(hideBin(process.argv))
@@ -21,7 +22,7 @@ const argv = yargs(hideBin(process.argv))
 const schemaPath = path.resolve(process.cwd(), argv.i)
 const typesPath = path.resolve(process.cwd(), argv.o)
 
-const parseOpenApiPropertyType = (property: types.Property): string => {
+const parseOpenApiPropertyType = (property: Types.Property): string => {
   if (property.type === 'string') {
     return 'string'
   }
@@ -34,7 +35,7 @@ const parseOpenApiPropertyType = (property: types.Property): string => {
   return 'unknown'
 }
 
-const writeProperties = (stream: WriteStream, properties: Record<string, types.Property>) => {
+const writeProperties = (stream: WriteStream, properties: Record<string, Types.Property>) => {
   for (const property in properties) {
     const hasComment = properties[property].description || properties[property].format
     if (hasComment) {
@@ -55,7 +56,7 @@ const writeProperties = (stream: WriteStream, properties: Record<string, types.P
 
 const prepareDefinitionWithAllOf = (
   definition: string,
-  definitions: Record<string, types.Definition>,
+  definitions: Record<string, Types.Definition>,
 ): { extendTypes: string } => {
   if (!definitions[definition].properties) {
     definitions[definition].properties = {}
@@ -85,7 +86,7 @@ const prepareDefinitionWithAllOf = (
 const writeDefinition = (
   stream: WriteStream,
   definition: string,
-  definitions: Record<string, types.Definition>,
+  definitions: Record<string, Types.Definition>,
 ): void => {
   const { extendTypes } = prepareDefinitionWithAllOf(definition, definitions)
   const properties = definitions[definition].properties
@@ -96,9 +97,16 @@ const writeDefinition = (
   }
 }
 
-const parseDefinitions = (schema: types.Schema) => {
-  const definitions: Record<string, types.Definition> = schema['definitions']
-  const fileStream = createWriteStream(typesPath)
+export const parseDefinitions = (inputPath: string, outputPath: string) => {
+  const schema: Types.Schema = JSON.parse(readFileSync(inputPath).toString())
+  if (!schema) {
+    return console.log(chalk.yellowBright(`Schema file ${inputPath} is empty`))
+  }
+  const definitions: Record<string, Types.Definition> = schema['definitions']
+  if (!definitions || !Object.keys(definitions).length) {
+    return console.log(chalk.yellowBright(`There are no definitions in schema ${inputPath}`))
+  }
+  const fileStream = createWriteStream(outputPath)
   for (const definition in definitions) {
     writeDefinition(fileStream, definition, definitions)
     console.log(
@@ -108,6 +116,4 @@ const parseDefinitions = (schema: types.Schema) => {
   fileStream.close()
 }
 
-const schema: types.Schema = JSON.parse(readFileSync(schemaPath).toString())
-
-parseDefinitions(schema)
+parseDefinitions(schemaPath, typesPath)
