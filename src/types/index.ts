@@ -1,3 +1,5 @@
+export type Args = { i: string; o: string }
+
 export type Method = 'get' | 'put' | 'patch' | 'post' | 'delete'
 
 export type HttpStatus =
@@ -107,6 +109,78 @@ export type Path = Record<
   }
 >
 
+export type Paths = Record<string, Path>
+
+export type Property =
+  | {
+      type: undefined
+      item: undefined
+      description: undefined
+      format: undefined
+      nullable: undefined
+      readOnly: undefined
+      $ref: string
+    }
+  | {
+      type: 'string' | 'integer'
+      item: undefined
+      description?: string
+      format?: string
+      nullable?: boolean
+      readOnly?: boolean
+      $ref: undefined
+    }
+  | {
+      type: 'array'
+      items: { $ref: string }
+      description?: string
+      format?: string
+      nullable?: boolean
+      readOnly?: boolean
+      $ref: undefined
+    }
+
+export type Properties = Record<string, Property>
+
+export type DefinitionWithProperties = {
+  properties: Properties
+  type: undefined
+  allOf: undefined
+  items: undefined
+  required?: string[]
+}
+
+export type DefinitionWithArrayItems = {
+  properties: Properties
+  type: 'array'
+  allOf: undefined
+  items: { $ref: string }
+  required: undefined
+}
+
+export type AllOf =
+  | { $ref: string; properties: undefined }
+  | { $ref: undefined; properties: Properties }
+
+export type DefinitionWithReference = {
+  properties: undefined
+  type: 'object'
+  allOf: AllOf[]
+  items: undefined
+  required: string[]
+}
+
+export type Definition =
+  | DefinitionWithProperties
+  | DefinitionWithReference
+  | DefinitionWithArrayItems
+
+export type Definitions = Record<string, Definition>
+
+export type Components = {
+  schemas: Definitions
+}
+
 export type Schema = {
   swagger: string
   info: {
@@ -118,38 +192,7 @@ export type Schema = {
   schemes: string[]
   basePath: string
   produces: string[]
-  paths: Record<string, Path>
-  definitions: Record<string, Definition>
+  paths: Paths
+  definitions?: Definitions
+  components?: Components
 }
-
-export type Property =
-  | {
-      type: 'string' | 'integer'
-      item: undefined
-      description?: string
-      format?: string
-    }
-  | {
-      type: 'array'
-      items: { $ref: string }
-      description?: string
-      format?: string
-    }
-
-export type DefinitionWithProperties = {
-  properties: Record<string, Property>
-  type: undefined
-  allOf: undefined
-}
-
-export type AllOf =
-  | { $ref: string; properties: undefined }
-  | { $ref: undefined; properties: Record<string, Property> }
-
-export type DefinitionWithReference = {
-  properties: undefined
-  type: 'object'
-  allOf: AllOf[]
-}
-
-export type Definition = DefinitionWithProperties | DefinitionWithReference
